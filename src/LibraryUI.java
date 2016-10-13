@@ -511,11 +511,7 @@ public class LibraryUI extends JFrame {
 	    super("Book Lookup", "ISBN");
 	}
 	protected void doLookup(int isbn) {
-	    try {
-			appendOutput(model.bookLookup(isbn));
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+	    appendOutput(model.bookLookup(isbn));
 	}
     }
 

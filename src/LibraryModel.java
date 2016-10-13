@@ -1,3 +1,4 @@
+
 /*
  * LibraryModel.java
  * Author:
@@ -6,11 +7,12 @@
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 public class LibraryModel {
 
@@ -21,9 +23,11 @@ public class LibraryModel {
 	// link connection
 	private Connection con;
 	private String url;
+	private JOptionPane quitPanel;
 
 	public LibraryModel(JFrame parent, String userid, String password) {
 		dialogParent = parent;
+		quitPanel = new JOptionPane();
 		this.userid = userid;
 		this.password = password;
 		try {
@@ -37,34 +41,49 @@ public class LibraryModel {
 		try {
 			con = DriverManager.getConnection(url, userid, password);
 		} catch (SQLException e) {
-			System.out.println("ERROR: DRIVER CONNECTION ISSUE");
-			e.printStackTrace();
-		}
-		// start a transaction (BEGIN POINT)
-		try {
-			con.setAutoCommit(false);
-		} catch (SQLException e) {
-			System.out.println("ERROR: SET CONNECTION TO BEGIN POINT");
-			e.printStackTrace();
+			System.out.println("ERROR: WRONG USER NAME OR WRONG PASSWORD");
+			quitPanel.showMessageDialog(dialogParent, "ERROR: WRONG USER NAME OR WRONG PASSWORD");
+			System.exit(0);
 		}
 	}
 
-	public String bookLookup(int isbn) throws SQLException {
-		String select = "SELECT * FROM BOOK WHERE isbn = " + isbn;
-		PreparedStatement prstmt = con.prepareStatement(select);
-
-		ResultSet rs = prstmt.executeQuery(select);
-
-		int tempID = 0;
-		String title;
-		int edition_no;
-		int numofcop;
-		int numleft;
-
-		while (rs.next()) {
-			tempID = rs.getInt("isbn");
+	public String bookLookup(int isbn) {
+		int ans = 0;
+		String title = "";
+		Statement s = null;
+		try {
+			con.setAutoCommit(false);
+			s = con.createStatement();
+		} catch (SQLException sqlex) {
+			System.out.println(
+					"An exception" + "while creating a statement," + "probably means I am no longer" + "connected");
 		}
-		return "tempID" + " TEST";
+		ResultSet rs = null;
+		try {
+
+			rs = s.executeQuery("SELECT * FROM BOOK WHERE isbn = " + isbn);
+		} catch (SQLException sqlex) {
+			System.out.println("An exception" + "while executing a query, probably" + "means my SQL is invalid");
+		}
+
+		try {
+			while (rs.next()) {
+				 ans = rs.getInt("isbn");
+				 title = rs.getString("title");
+			}
+		} catch (SQLException sqlex) {
+			System.out.println("An exception" + "while processing a result, probably" + "means I have done something"
+					+ "really bad");
+		}
+		try {
+			con.commit();
+			con.setAutoCommit(true);
+
+		} catch (SQLException e) {
+			System.out.println("ERROR: PUBLISH COMMIT ISSUE");
+			e.printStackTrace();
+		}
+		return (""+ans+" "+title);
 
 	}
 
